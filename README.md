@@ -1,4 +1,4 @@
-# Домашнее задание № 21 по теме: "Статическая и динамическая маршрутизация, OSPF". К курсу Administrator Linux. Professional
+# Домашнее задание № 22 по теме: "Мосты, туннели и VPN". К курсу Administrator Linux. Professional
 
 ## Задание
 
