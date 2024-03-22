@@ -1,0 +1,55 @@
+#set_var EASYRSA        "${0%/*}"
+set_var EASYRSA_OPENSSL "openssl"
+
+set_var EASYRSA_PKI             "/etc/openvpn/pki"
+
+#set_var EASYRSA_TEMP_DIR       "$EASYRSA_PKI"
+
+#set_var EASYRSA_DN     "cn_only"
+
+set_var EASYRSA_REQ_COUNTRY     "RU"
+set_var EASYRSA_REQ_PROVINCE    "CHR"
+set_var EASYRSA_REQ_CITY        "NCHK"
+set_var EASYRSA_REQ_ORG         "NGSP"
+set_var EASYRSA_REQ_EMAIL       "noreply@my.local"
+set_var EASYRSA_REQ_OU          "IT"
+
+set_var EASYRSA_KEY_SIZE        2048
+
+set_var EASYRSA_ALGO            rsa
+
+#set_var EASYRSA_CURVE          secp384r1
+
+# In how many days should the root CA key expire?
+
+set_var EASYRSA_CA_EXPIRE       3650
+
+#set_var EASYRSA_CERT_EXPIRE    825
+
+#set_var EASYRSA_CRL_DAYS       180
+
+#set_var EASYRSA_CERT_RENEW     30
+
+set_var EASYRSA_RAND_SN         "yes"
+
+#set_var EASYRSA_NS_SUPPORT     "no"
+
+#set_var EASYRSA_NS_COMMENT     "Easy-RSA Generated Certificate"
+
+#set_var EASYRSA_TEMP_FILE      "$EASYRSA_PKI/extensions.temp"
+
+#alias awk="/alt/bin/awk"
+#alias cat="/alt/bin/cat"
+
+#set_var EASYRSA_EXT_DIR        "$EASYRSA/x509-types"
+
+#set_var EASYRSA_KDC_REALM      "CHANGEME.EXAMPLE.COM"
+
+#set_var EASYRSA_SSL_CONF       "$EASYRSA/openssl-easyrsa.cnf"
+
+set_var EASYRSA_REQ_CN          "RASVPN"
+
+set_var EASYRSA_DIGEST          "sha256"
+
+set_var EASYRSA_BATCH           "1"
+

@@ -1,0 +1,3 @@
+openvpn_device: 'tun'
+openvpn_proto:  'udp'
+rasvpn_port:    '1207'

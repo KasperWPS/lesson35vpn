@@ -1,0 +1,209 @@
+---
+- hosts: all
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - defaults/main.yml
+
+  tasks:
+  - name: Accept login with password from sshd
+    ansible.builtin.lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^PasswordAuthentication no$'
+      line: 'PasswordAuthentication yes'
+      state: present
+    notify:
+      - Restart sshd
+
+  - name: Set timezone
+    community.general.timezone:
+      name: Europe/Moscow
+
+  - name: set up forward packages across routers
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      state: present
+    when: "'routers' in group_names"
+
+  - name: Install soft
+    ansible.builtin.apt:
+      name:
+        - vim
+        - tcpdump
+        - traceroute
+        - nmap
+        - iperf3
+      state: present
+      update-cache: true
+
+  - name: Install OpenVPN
+    ansible.builtin.apt:
+      name:
+        - openvpn
+      state: present
+    when: (ansible_hostname != "ocserv")
+
+  - name: Install easy-rsa for rasvpn
+    ansible.builtin.apt:
+      name: easy-rsa
+      state: present
+    when: (ansible_hostname == 'rasvpn')
+
+  - name: Generate secret OpenVPN
+    ansible.builtin.command: openvpn --genkey secret /etc/openvpn/static.key
+    args:
+      creates: /etc/openvpn/static.key
+    when: (ansible_hostname == 'ovpnsrv')
+    notify: Restart openvpn
+
+  - name: Copy static.key
+    ansible.builtin.fetch:
+      src: /etc/openvpn/static.key
+      dest: files/openvpn-static.key
+      flat: true
+    when: (ansible_hostname == 'ovpnsrv')
+
+  - name: Copy static.key to client
+    ansible.builtin.copy:
+      src: files/openvpn-static.key
+      dest: /etc/openvpn/static.key
+      mode: '0640'
+      owner: root
+      group: root
+    notify: Restart openvpn
+    when: (ansible_hostname == 'client')
+
+  - name: Configure OpenVPN
+    ansible.builtin.template:
+      src: openvpn-server.conf.j2
+      dest: /etc/openvpn/server.conf
+      owner: root
+      group: root
+      mode: '0640'
+    when: (ansible_hostname == "ovpnsrv" or ansible_hostname == 'client')
+    notify: Restart openvpn
+
+  - name: Copy systemd OpenVPN service file
+    ansible.builtin.copy:
+      src: files/openvpn@.service
+      dest: /etc/systemd/system/openvpn@.service
+      owner: root
+      group: root
+      mode: '0640'
+    when: (ansible_hostname != "ocserv")
+
+  - name: Copy vars easyrsa
+    ansible.builtin.copy:
+      src: files/rasvpn-vars
+      dest: /usr/share/easy-rsa/vars
+    when: (ansible_hostname == 'rasvpn')
+
+  - name: Copy script for generate key pairs
+    ansible.builtin.copy:
+      src: files/rasvpn-gencerts.sh
+      dest: /home/vagrant/gencerts.sh
+      mode: '0750'
+      owner: root
+      group: root
+    when: (ansible_hostname == 'rasvpn')
+
+  - name: Check pki exists
+    ansible.builtin.stat:
+      path: /etc/openvpn/pki
+    register: pkidir
+
+  - name: Generate RSA key pairs
+    ansible.builtin.shell: /home/vagrant/gencerts.sh
+    when: (ansible_hostname == 'rasvpn' and not pkidir.stat.exists)
+
+  - name: Copy client config on rasvpn server
+    ansible.builtin.copy:
+      src: files/rasvpn-client-config
+      dest: /etc/openvpn/client/client
+    when: ansible_hostname == 'rasvpn'
+
+  - name: Get client certs in local directory
+    ansible.builtin.fetch:
+      src: /etc/openvpn/pki/{{ item }}
+      dest: files/clientk/
+      flat: true
+    with_items:
+      - ca.crt
+      - issued/client.crt
+      - private/client.key
+    when: ansible_hostname == 'rasvpn'
+
+  - name: Copy client certs on rasclient
+    ansible.builtin.copy:
+      src: files/clientk/{{ item }}
+      dest: /etc/openvpn/{{ item }}
+      mode: '0600'
+      owner: root
+      group: 'root'
+    with_items:
+      - ca.crt
+      - client.crt
+      - client.key
+    when: ansible_hostname == 'rasclient'
+
+  - name: Configure OpenVPN
+    ansible.builtin.template:
+      src: rasvpn-server.conf.j2
+      dest: /etc/openvpn/server.conf
+      owner: root
+      group: root
+      mode: '0640'
+    when: (ansible_hostname == "rasclient" or ansible_hostname == 'rasvpn')
+    notify: Restart openvpn
+
+  # OpenConnect
+
+  - name: Install OpenConnect
+    ansible.builtin.apt:
+      name:
+        - ocserv
+      state: present
+    when: (ansible_hostname == "ocserv")
+
+  - name: Copy config OpenConnect server
+    ansible.builtin.copy:
+      src: files/ocserv-conf
+      dest: /etc/ocserv/ocserv.conf
+    notify: Restart ocserv
+    when: (ansible_hostname == "ocserv")
+
+  - name: Copy ocpaccwd OpenConnect server
+    ansible.builtin.copy:
+      src: files/ocserv-ocpasswd
+      dest: /etc/ocserv/ocpasswd
+    when: (ansible_hostname == "ocserv")
+
+  - name: Install OpenConnect client
+    ansible.builtin.apt:
+      name:
+        - openconnect
+      state: present
+    when: (ansible_hostname == "occlient")
+
+  handlers:
+
+  - name: Restart openvpn
+    ansible.builtin.service:
+      name: openvpn@server
+      state: restarted
+      enabled: true
+
+  - name: Restart ocserv
+    ansible.builtin.service:
+      name: ocserv
+      state: restarted
+      enabled: true
+
+  - name: Restart sshd
+    ansible.builtin.service:
+      name: sshd
+      state: restarted
+
+

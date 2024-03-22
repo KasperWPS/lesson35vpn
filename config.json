@@ -1,0 +1,77 @@
+[
+  {
+    "name": "ovpnsrv",
+    "cpus": 1,
+    "gui": false,
+    "box": "generic/debian11",
+    "private_network":
+    [
+      { "ip": "192.168.10.1",  "adapter": 2, "netmask": "255.255.255.0",   "virtualbox__intnet": "net1"  },
+      { "ip": "192.168.56.10", "adapter": 3, "netmask": "255.255.255.0" }
+    ],
+    "memory": "640",
+    "no_share": true
+  },
+  {
+    "name": "client",
+    "cpus": 1,
+    "gui": false,
+    "box": "generic/debian11",
+    "private_network":
+    [
+      { "ip": "192.168.56.20", "adapter": 2, "netmask": "255.255.255.0" }
+    ],
+    "memory": 640,
+    "no_share": true
+  },
+  {
+    "name": "rasvpn",
+    "cpus": 1,
+    "gui": false,
+    "box": "generic/debian11",
+    "private_network":
+    [
+      { "ip": "192.168.20.1",  "adapter": 2, "netmask": "255.255.255.0",   "virtualbox__intnet": "net2"  },
+      { "ip": "192.168.56.12", "adapter": 3, "netmask": "255.255.255.0" }
+    ],
+    "memory": "640",
+    "no_share": true
+  },
+  {
+    "name": "rasclient",
+    "cpus": 1,
+    "gui": false,
+    "box": "generic/debian11",
+    "private_network":
+    [
+      { "ip": "192.168.56.13", "adapter": 2, "netmask": "255.255.255.0" }
+    ],
+    "memory": "640",
+    "no_share": true
+  },
+  {
+    "name": "ocserv",
+    "cpus": 1,
+    "gui": false,
+    "box": "generic/debian11",
+    "private_network":
+    [
+      { "ip": "192.168.30.1",  "adapter": 2, "netmask": "255.255.255.0",   "virtualbox__intnet": "net3"  },
+      { "ip": "192.168.56.11", "adapter": 3, "netmask": "255.255.255.0" }
+    ],
+    "memory": "640",
+    "no_share": true
+  },
+  {
+    "name": "occlient",
+    "cpus": 1,
+    "gui": false,
+    "box": "generic/debian11",
+    "private_network":
+    [
+      { "ip": "192.168.56.14", "adapter": 2, "netmask": "255.255.255.0" }
+    ],
+    "memory": "640",
+    "no_share": true
+  }
+]

@@ -1,0 +1,30 @@
+dev {{ openvpn_device }}
+{% if ansible_hostname == 'rasvpn' %}
+port {{ rasvpn_port }}
+proto {{ openvpn_proto }}
+ca /etc/openvpn/pki/ca.crt
+cert /etc/openvpn/pki/issued/server.crt
+key /etc/openvpn/pki/private/server.key
+dh /etc/openvpn/pki/dh.pem
+server 10.10.10.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+client-to-client
+client-config-dir /etc/openvpn/client
+keepalive 10 120
+{% endif %}
+{% if ansible_hostname == 'rasclient' %}
+proto {{ openvpn_proto }}
+remote 192.168.56.12 {{ rasvpn_port }}
+client
+resolv-retry infinite
+remote-cert-tls server
+ca ./ca.crt
+cert ./client.crt
+key ./client.key
+{% endif %}
+comp-lzo
+persist-key
+persist-tun
+status /var/log/openvpn-status.log
+log /var/log/openvpn.log
+verb 3
